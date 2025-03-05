@@ -5,6 +5,9 @@ import csv
 import pandas as pd
 import logging
 import time
+import argparse
+import socket
+import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from lxml import etree
 from ollama import chat, ChatResponse
@@ -25,11 +28,30 @@ console.setFormatter(formatter)
 logging.getLogger("").addHandler(console)
 
 
+
+
+
+def ensure_ollama_is_running():
+    """
+    Prüft, ob Ollama auf Port 11434 lauscht, und startet ihn ggf.
+    Wartet dann bis zu 10 Sekunden, bis Ollama bereit ist.
+    """
+
+
+    logging.info("Kein Ollama-Server gefunden. Starte 'ollama serve' ...")
+    # ollama serve im Hintergrund starten
+    subprocess.Popen(["ollama", "serve"])
+
+
+
+
+
 class PromptBuilder:
     def __init__(self):
         self.prompt_template = """**Prompt:**
 
 **Analyze the following sentences and classify them into one of the given categories.**  
+**One sentence, one category.**
 **Output a well-formed XML snippet that contains a `<result>` tag. Inside `<result>`, for each sentence output exactly the following tags in order:**  
 <result>
 `<i>...</i>`  
@@ -150,6 +172,7 @@ class OllamaProcessor:
         try:
             df = pd.read_csv(self.input_csv, encoding="utf-8", sep=";", on_bad_lines="skip")
             df = df.dropna(subset=["'FREITEXT'"])
+            # Es werden nur so viele Zeilen eingelesen, wie Batches * Batchgröße vorgesehen sind
             freitexte = df["'FREITEXT'"].head(self.batch_size * self.max_batches).tolist()
             logging.info(f"Eingelesene Zeilen: {len(freitexte)}")
             return freitexte
@@ -159,15 +182,16 @@ class OllamaProcessor:
 
     def call_ollama(self, prompt, batch_index):
         logging.info(f"Aufruf von ollama für Batch {batch_index}")
-        try:
-            # Verwende die ollama chat()-Methode, um nur den response-Wert zu erhalten
-            response: ChatResponse = chat(model="llama3.2:3b", messages=[{'role': 'user', 'content': prompt}])
-            response_text = response.message.content
-            logging.info(f"Ollama-Antwort für Batch {batch_index} empfangen: {response_text[:100]}...")
-            return response_text
-        except Exception as e:
-            logging.error(f"Fehler beim Aufruf von ollama in Batch {batch_index}: {e}")
-            return None
+        # Wiederhole den KI-Aufruf im Fehlerfall, ohne den gesamten Prozess zu stoppen
+        while True:
+            try:
+                response: ChatResponse = chat(model="llama3.2:3b", messages=[{'role': 'user', 'content': prompt}])
+                response_text = response.message.content
+                logging.info(f"Ollama-Antwort für Batch {batch_index} empfangen: {response_text[:100]}...")
+                return response_text
+            except Exception as e:
+                logging.error(f"Fehler beim Aufruf von ollama in Batch {batch_index}: {e}. Neuer Versuch...")
+                time.sleep(2)
 
     def process_batches(self):
         freitexte = self.read_input()
@@ -206,10 +230,26 @@ class OllamaProcessor:
 
 
 def main():
+    # Vor dem Start sichergehen, dass ollama serve läuft
+    ensure_ollama_is_running()
+
+    parser = argparse.ArgumentParser(description="Ollama KI Batch Processor")
+    parser.add_argument("--batch_size", type=int, default=1, help="Anzahl der Zeilen pro Batch")
+    parser.add_argument("--max_batches", type=int, default=15, help="Anzahl der Batches (simulierte Threads)")
+    args = parser.parse_args()
+
     input_csv = "/home/lucy/PycharmProjects/bachelorarbeit_redo/project/src/data/FB Freitextantworten.csv"
     output_csv = "output.csv"
-    processor = OllamaProcessor(input_csv, output_csv, batch_size=2, max_batches=2)
+
+    processor = OllamaProcessor(
+        input_csv,
+        output_csv,
+        batch_size=args.batch_size,
+        max_batches=args.max_batches
+    )
+
     processor.run()
+
 
 if __name__ == "__main__":
     main()
