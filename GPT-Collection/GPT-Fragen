@@ -1,0 +1,13 @@
+Es soll mir pro Run bitte eine Datei in einem spezifischen Ordner erstellt werden.
+Der Dateiname soll so konzipiert sein, dass er leicht nach Erstellungszeit sortiert werden kann.
+Datum und Uhrzeit sollen inkludiert werden!
+
+### Format
+Ich möchte, dass eine **einfache Tabelle** im md-Style erstellt wird.
+Die Spaltennamen sind:
+- Schritt (0..n)
+- Modul
+- Filename
+- Methodename
+- Übergebene Argumente -> Argumentname1: typ, Argumentname2: typ, etc.
+- Methoderückgabe (falls vorhanden, sonst „-“)

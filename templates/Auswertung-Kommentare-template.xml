@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feedback>
+  <!-- Header: Dynamisch basierend auf den Input-Daten -->
+  <header>
+    <semester>{semester}</semester> <!-- Sommersemester oder Wintersemester -->
+    <jahr>{jahr}</jahr>
+    <feedback_title>LV-Feedback {semester} {jahr}</feedback_title>
+  </header>
+
+  <!-- Zusammenfassung der Filterung -->
+  <summary>
+    <frage_text>Alle Kommentare zu Frage: Ich habe folgende Anregungen und Kommentare zum Fragebogen:</frage_text>
+    <filter_info>
+      <bedeutungslose>{anzahl_bedeutungslose}</bedeutungslose>
+      <gesamt>{anzahl_gesamt}</gesamt>
+      <!-- Z.B.: "Es wurden {anzahl_bedeutungslose} bedeutungslose Kommentare von insgesamt {anzahl_gesamt} herausgefiltert." -->
+    </filter_info>
+  </summary>
+
+  <!-- Kategorien mit Länge oder sonstigen Informationen -->
+  <categories>
+    <category name="Bezug auf LV" length="{length_bezug_auf_lv}"/>
+    <category name="Nicht verständlich" length="{length_nicht_verstaendlich}"/>
+    <category name="nicht eindeutig zuordenbar" length="{length_nicht_eindeutig}"/>
+    <category name="Negativ" length="{length_negativ}"/>
+    <category name="Positiv" length="{length_positiv}"/>
+    <category name="Neutral, kein Kommentar, äquivalente Symbole, bedeutungslos" length="{length_neutral}"/>
+    <category name="Anregungen, Wünsche" length="{length_anregungen}"/>
+  </categories>
+
+  <!-- Tabellarische Auflistung der einzelnen Kommentare -->
+  <comments>
+    <row>
+      <id>{id}</id>
+      <kommentar>{kommentar}</kommentar>
+      <kategorie>{kategorie}</kategorie>
+      <wuensche>{wuensche}</wuensche>
+    </row>
+    <!-- Weitere <row>-Elemente werden dynamisch hinzugefügt -->
+  </comments>
+</feedback>
