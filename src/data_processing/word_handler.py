@@ -1,1 +1,0 @@
-# Verarbeitung von Word-Dokumenten

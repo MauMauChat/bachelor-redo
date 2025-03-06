@@ -2,7 +2,8 @@
 
 PROMPT_TEMPLATE = """**Prompt:**
 
-**Analyze the following sentences and classify them into one of the given categories.**  
+**Analyze the following sentences and classify them into one of the given categories.** 
+**The Input will be id:sentence** 
 **One sentence, one category.**
 **Output a well-formed XML snippet that contains a `<result>` tag. Inside `<result>`, for each sentence output exactly the following tags in order:**  
 <result>

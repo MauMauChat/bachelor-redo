@@ -6,17 +6,18 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from ollama import chat, ChatResponse
 from prompt_builder import PromptBuilder
 from response_parser import ResponseParser
-from csv_writer import CSVWriter
+from xlsx_writer import ExcelWriter
 
 class OllamaProcessor:
     def __init__(self, input_csv, output_csv, batch_size=2, max_batches=2):
+        template_path = "/project/src/templates/2024-09-30_Auswertung Kommentare.xlsx"
         self.input_csv = input_csv
         self.output_csv = output_csv
         self.batch_size = batch_size
         self.max_batches = max_batches
         self.prompt_builder = PromptBuilder()
         self.response_parser = ResponseParser()
-        self.csv_writer = CSVWriter(output_csv)
+        self.csv_writer = ExcelWriter(template_path, output_csv)
         logging.info(f"OllamaProcessor initialisiert mit Input: {input_csv}, Output: {output_csv}, Batchgröße: {batch_size}, Max Batches: {max_batches}")
 
     def read_input(self):
@@ -48,7 +49,7 @@ class OllamaProcessor:
         freitexte = self.read_input()
         if not freitexte:
             return {}
-        batches = [freitexte[i:i+self.batch_size] for i in range(0, len(freitexte), self.batch_size)]
+        batches = [freitexte[i:i + self.batch_size] for i in range(0, len(freitexte), self.batch_size)]
         batches = batches[:self.max_batches]
         results = {}
         current_id = 1

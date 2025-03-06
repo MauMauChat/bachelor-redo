@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 import logging
 import argparse
+import atexit
 from ollama_processor import OllamaProcessor
-from ollama_server import ensure_ollama_is_running
+from ollama_server import ensure_ollama_is_running, kill_process_on_port
 
 def main():
-    # Vor dem Start sichergehen, dass ollama serve läuft
+    # Ollama-Server starten/neu starten
     ensure_ollama_is_running()
 
+    # Beim Programmende sicherheitshalber den Ollama-Server-Port wieder killen.
+    atexit.register(kill_process_on_port, 11434)
+
     parser = argparse.ArgumentParser(description="Ollama KI Batch Processor")
-    parser.add_argument("--batch_size", type=int, default=5, help="Anzahl der Zeilen pro Batch")
-    parser.add_argument("--max_batches", type=int, default=1, help="Anzahl der Batches (simulierte Threads)")
+    parser.add_argument("--batch_size", type=int, default=10, help="Anzahl der Zeilen pro Batch")
+    parser.add_argument("--max_batches", type=int, default=2, help="Anzahl der Batches (simulierte Threads)")
     args = parser.parse_args()
 
     input_csv = "/home/lucy/PycharmProjects/bachelorarbeit_redo/project/src/data/FB Freitextantworten.csv"
-    output_csv = "output.csv"
+    output_xlsx = "output.xlsx"
 
     processor = OllamaProcessor(
         input_csv,
-        output_csv,
+        output_xlsx,
         batch_size=args.batch_size,
         max_batches=args.max_batches
     )
