@@ -2,6 +2,8 @@
 import logging
 import argparse
 import atexit
+import os
+
 from ollama_processor import OllamaProcessor
 from ollama_server import ensure_ollama_is_running, kill_process_on_port
 
@@ -17,7 +19,8 @@ def main():
     parser.add_argument("--max_batches", type=int, default=2, help="Anzahl der Batches (simulierte Threads)")
     args = parser.parse_args()
 
-    input_csv = "/home/lucy/PycharmProjects/bachelorarbeit_redo/project/src/data/FB Freitextantworten.csv"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    input_csv = os.path.join(current_dir, "..", "data", "FB Freitextantworten.csv")
     output_xlsx = "output.xlsx"
 
     processor = OllamaProcessor(

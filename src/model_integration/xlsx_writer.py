@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import logging
 import datetime
-import pandas as pd
 import matplotlib.pyplot as plt
 import openpyxl
-from openpyxl.utils import get_column_letter
+from openpyxl.drawing.image import Image as OpenpyxlImage
 
 class ExcelWriter:
     def __init__(self, template_path, output_path):
@@ -32,7 +31,6 @@ class ExcelWriter:
             ...
           ]
         """
-
         try:
             # 1) Excel-Vorlage laden
             wb = openpyxl.load_workbook(self.template_path)
@@ -60,8 +58,8 @@ class ExcelWriter:
             # Jede Kategorie bekommt ein leeres Array, in das wir Tuples (ID, Satz) speichern
             results_by_category = {cat: [] for cat in category_list}
 
-            # Gleichzeitig wollen wir alles nochmal in die Excel-Tabelle schreiben (Spalten A,B,C)
-            start_header = 17
+            # Gleichzeitig wollen wir alles nochmal in die Excel-Tabelle schreiben (Spalten A, B, C)
+            start_header = 16
             sheet.cell(row=start_header, column=1, value="ID")
             sheet.cell(row=start_header, column=2, value="Kommentar")
             sheet.cell(row=start_header, column=3, value="Kategorie")
@@ -72,26 +70,21 @@ class ExcelWriter:
                 s_val = row_data["s"]
                 c_val = row_data["c"]
 
-                # In unsere Excel-Datei reinschreiben
+                # In die Excel-Tabelle schreiben
                 sheet.cell(row=data_row, column=1, value=i_val)   # ID
-                sheet.cell(row=data_row, column=2, value=s_val)   # Satz
-                sheet.cell(row=data_row, column=3, value=c_val)   # Kategorie
+                sheet.cell(row=data_row, column=2, value=s_val)     # Kommentar
+                sheet.cell(row=data_row, column=3, value=c_val)     # Kategorie
                 data_row += 1
 
-                # In unser Zwischenspeicher-Dict (Mapping)
+                # Mapping befüllen
                 if c_val in results_by_category:
                     results_by_category[c_val].append((i_val, s_val))
-                else:
-                    # Falls eine unbekannte Kategorie auftaucht, kannst du sie ggf. ignorieren
-                    # oder dynamisch hinzufügen. Hier ignorieren wir sie.
-                    pass
 
-            # 4) Category-Counts ermitteln
-            # Wie viele Sätze pro Kategorie?
+            # 4) Kategorie-Zählungen ermitteln
             cat_counts = {cat: len(results_by_category[cat]) for cat in category_list}
+            total = sum(cat_counts.values())
 
             # 5) Tortendiagramm erstellen
-            total = sum(cat_counts.values())  # Gesamtanzahl
             plt.figure()
             plt.pie(
                 cat_counts.values(),
@@ -100,26 +93,32 @@ class ExcelWriter:
                 startangle=140
             )
             plt.title(f"Auswertung {semester}semester {jahr}")
-            plt.axis('equal')  # Kreis statt Ellipse
+            plt.axis('equal')  # Kreisdiagramm
 
+            # Diagramm speichern
             diagramm_name = f"auswertung_{semester}_{jahr}.png"
             plt.savefig(diagramm_name, bbox_inches="tight")
             plt.close()
             logging.info(f"Tortendiagramm gespeichert: {diagramm_name}")
 
-            # 6) Summen ab Zeile 19 in Spalte E/F
+            # 6) Diagramm in Excel einfügen
+            img = OpenpyxlImage(diagramm_name)
+            # Beispiel: Bild in Zelle H2 platzieren
+            sheet.add_image(img, "H2")
+
+            # 7) Summen ab Zeile 19 in Spalte E/F einfügen
             start_summary = 19
             for i, cat in enumerate(category_list):
                 row_index = start_summary + i
                 sheet.cell(row=row_index, column=5, value=cat)            # Kategorie
-                sheet.cell(row=row_index, column=6, value=cat_counts[cat]) # Anzahl Sätze
+                sheet.cell(row=row_index, column=6, value=cat_counts[cat])  # Anzahl Sätze
 
             # Gesamtergebnis in Zeile 26
             total_row = start_summary + len(category_list)
             sheet.cell(row=total_row, column=5, value="Gesamtergebnis")
             sheet.cell(row=total_row, column=6, value=total)
 
-            # 7) Excel speichern
+            # 8) Excel speichern
             wb.save(self.output_path)
             logging.info(f"Excel-Auswertung erstellt: {self.output_path}")
 

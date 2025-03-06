@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import os
 import time
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -10,7 +11,9 @@ from xlsx_writer import ExcelWriter
 
 class OllamaProcessor:
     def __init__(self, input_csv, output_csv, batch_size=2, max_batches=2):
-        template_path = "/project/src/templates/2024-09-30_Auswertung Kommentare.xlsx"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        template_path = os.path.join(current_dir, "..", "templates", "2024-09-30_Auswertung-Kommentare.xlsx")
+
         self.input_csv = input_csv
         self.output_csv = output_csv
         self.batch_size = batch_size
